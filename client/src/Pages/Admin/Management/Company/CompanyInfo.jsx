@@ -208,7 +208,7 @@ const CompanyInfo = () => {
                         <textarea
                             type="text"
                             name="twitter"
-                            placeholder="Enter Twitter Link"
+                            placeholder="Enter Tiktok Link"
                             value={formData.twitter}
                             onChange={handleChange}
                             required

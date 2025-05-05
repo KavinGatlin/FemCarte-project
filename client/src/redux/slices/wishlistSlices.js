@@ -120,10 +120,12 @@ const wishlistSlice = createSlice({
         builder
             .addCase(addToWishlist.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(addToWishlist.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.wishlistItems = action.payload;
+                state.error = null;
             })
             .addCase(addToWishlist.rejected, (state, action) => {
                 state.isLoading = false;
@@ -132,6 +134,7 @@ const wishlistSlice = createSlice({
 
             .addCase(removeFromWishlist.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(removeFromWishlist.fulfilled, (state, action) => {
                 state.isLoading = false;
@@ -151,12 +154,15 @@ const wishlistSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.payload;
             })
+
             .addCase(fetchWishlistItems.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(fetchWishlistItems.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.wishlistItems = action.payload;
+                state.error = null;
             })
             .addCase(fetchWishlistItems.rejected, (state, action) => {
                 state.isLoading = false;
@@ -165,6 +171,7 @@ const wishlistSlice = createSlice({
 
             .addCase(moveToCart.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(moveToCart.fulfilled, (state, action) => {
                 state.isLoading = false;

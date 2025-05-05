@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { AdminPanelSettings, Dashboard, Home, LockOpen, LockReset, PersonPin } from "@mui/icons-material";
+import {
+  AdminPanelSettings,
+  Dashboard,
+  PersonPin,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -13,9 +16,7 @@ const Profile = () => {
   // Default Google profile picture URL format
   const googleProfilePicture = user?.avatar.url;
 
-// console.log(googleProfilePicture);
-
-
+  // console.log(googleProfilePicture);
 
   const [activeSection, setActiveSection] = useState("profile"); // Default section
 
@@ -26,7 +27,6 @@ const Profile = () => {
     avatar: googleProfilePicture || user?.avatar[0]?.url, // Get avatar URL or default
   });
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUpdatedUser((prev) => ({ ...prev, [name]: value }));
@@ -36,7 +36,6 @@ const Profile = () => {
     e.preventDefault();
     // alert("Changes saved successfully!");
   };
-
 
   const navigateLink = () => {
     navigate("/admin/dashboard");
@@ -65,7 +64,7 @@ const Profile = () => {
                 disabled
               />
             </div>
-            <div className="form-group">
+            {/* <div className="form-group">
               <label>Phone</label>
               <input
                 type="tel"
@@ -73,14 +72,14 @@ const Profile = () => {
                 value={updatedUser.phone}
                 onChange={handleChange}
               />
-            </div>
+            </div> */}
             <button type="submit" className="save-changes">
               Save Changes
             </button>
           </form>
         );
 
-     case "address":
+      case "address":
         return (
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -124,12 +123,7 @@ const Profile = () => {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={user.email}
-                disabled
-              />
+              <input type="email" name="email" value={user.email} disabled />
             </div>
             <button type="submit" className="save-changes">
               Reset Password
@@ -152,10 +146,7 @@ const Profile = () => {
           <div className="profile-left">
             <h2>Profile</h2>
             <div className="profile-photo">
-              <img
-                src={updatedUser.avatar}
-                alt="Profile"
-              />
+              <img src={updatedUser.avatar} alt="" />
               {/* <button className="update-photo">Change Photo</button> */}
             </div>
 
@@ -167,22 +158,30 @@ const Profile = () => {
             <h2>Account Options</h2>
             <ul>
               <li onClick={() => setActiveSection("profile")}>
-                <PersonPin />Profile
+                <PersonPin />
+                Profile
               </li>
-              <li onClick={() => setActiveSection("address")}><Home />Address</li>
+              {/* <li onClick={() => setActiveSection("address")}>
+                <Home />
+                Address
+              </li>
               <li onClick={() => setActiveSection("changePassword")}>
                 <LockOpen /> Change Password
               </li>
               <li onClick={() => setActiveSection("forgotPassword")}>
                 <LockReset /> Forgotten Password
-              </li>
+              </li> */}
             </ul>
 
             {user?.role === "admin" && (
               <div className="admin-section">
-                <h3><AdminPanelSettings /> Admin Dashboard</h3>
+                <h3>
+                  <AdminPanelSettings /> Admin Dashboard
+                </h3>
                 <ul>
-                  <li onClick={navigateLink}><Dashboard /> Manage Admin</li>
+                  <li onClick={navigateLink}>
+                    <Dashboard /> Manage Admin
+                  </li>
                 </ul>
               </div>
             )}

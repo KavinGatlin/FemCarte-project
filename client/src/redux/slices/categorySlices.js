@@ -75,7 +75,7 @@ export const addSubCategory = createAsyncThunk("categories/addSubCategory", asyn
         const response = await axios.post(`${server}/category/admin/subcategory/add`, { name, categoryId }, {
             headers: {
                 Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
+                "Content-Type": "application/json",
             },
         });
         return response.data.subCategory;
@@ -91,7 +91,7 @@ export const updateSubCategory = createAsyncThunk("categories/updateSubCategory"
         const response = await axios.put(`${server}/category/admin/subcategory/update/${id}`, { name, categoryId }, {
             headers: {
                 Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
+                "Content-Type": "application/json",
             },
         });
         return response.data.subCategory;
@@ -107,7 +107,6 @@ export const deleteSubCategory = createAsyncThunk("categories/deleteSubCategory"
         await axios.delete(`${server}/category/admin/subcategory/delete/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
             },
         });
         return id;

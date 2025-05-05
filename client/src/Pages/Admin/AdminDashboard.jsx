@@ -6,6 +6,7 @@ import DashboardTable from "../../Components/Admin/DashboardTable";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { fetchBarCharts, fetchDashboardStats, fetchLineCharts, fetchPieCharts } from "../../redux/slices/AdminChartSlices";
+import Loadertwo from "../../Components/Loader/Loadertwo";
 
 
 
@@ -25,7 +26,7 @@ const AdminDashboard = () => {
     }, [dispatch]);
 
     if (loading) {
-        return <p>Loading dashboard data...</p>;
+        return <><Loadertwo/></>;
     }
 
     if (error) {

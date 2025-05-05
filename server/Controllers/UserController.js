@@ -108,8 +108,6 @@ export const registerUser = [upload.fields([{ name: 'avatar', maxCount: 1 }]), c
 
 
 
-
-
     const user = await User.create({
         name,
         email,

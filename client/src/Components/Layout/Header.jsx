@@ -1,61 +1,45 @@
-import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  AddShoppingCart,
-  Clear,
-  Face,
-  Favorite,
-  Login,
-  Logout,
-  Person,
-  PersonAdd,
-  Search,
-  ShoppingBag,
-} from "@mui/icons-material";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCompanyInfo } from "../../redux/slices/companyDetailsSlices";
 import logo from "../../assets/Fem-Cartel-Wording-1400x352.png";
 import womenImage from "../../assets/0106_SP25_MarketingMoment_Dreamknit_Womens.webp";
 import accessoriesImage from "../../assets/0106_SP25_MarketingMoment_Accessories.webp";
 import shoesImage from "../../assets/0106_SP25_MarketingMoment_ACTVCLUB.webp";
-import { fetchLiveSearchProducts } from "../../redux/slices/productSlices";
-import { logout } from "../../redux/slices/userSlices";
 import TopNav from "./TopNav";
+import { fetchWishlistItems } from "../../redux/slices/wishlistSlices";
+import { fetchCartItems } from "../../redux/slices/cartSlices";
+import IconSection from "./HeaderIconSection";
 
 const Header = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
-  const { wishlistItems } = useSelector((state) => state.wishlist);
-  const { cartItems = [] } = useSelector((state) => state.shopCart);
   const { companys } = useSelector((state) => state.company);
-  const { liveSearchResults, searchLoading } = useSelector(
-    (state) => state.products
-  );
 
-  // Local state for search and suggestions
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [displayedSuggestions, setDisplayedSuggestions] = useState([]);
+
 
   // Other Header UI states
   const [hoveredItem, setHoveredItem] = useState(null);
   const [showTopNav, setShowTopNav] = useState(true);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [profileDropdownVisible, setProfileDropdownVisible] = useState(false);
 
-  const profileDropdownRef = useRef(null);
-  const searchRef = useRef(null);
+
+  
   let hoverTimeout = null;
 
   useEffect(() => {
     dispatch(fetchCompanyInfo());
   }, [dispatch]);
 
-  // Whenever live search results update, update the local displayed suggestions
+  // Whenever `user` becomes available (or on page refresh), re-load wishlist & cart
   useEffect(() => {
-    setDisplayedSuggestions(liveSearchResults);
-  }, [liveSearchResults]);
+    if (user && user._id) {
+      dispatch(fetchWishlistItems(user._id));
+      dispatch(fetchCartItems(user._id)); // make sure you have a fetchCartItems thunk
+    }
+  }, [dispatch, user]);
+
+
 
   // Dropdown data for nav items
   const dropdownItems = {
@@ -129,71 +113,7 @@ const Header = () => {
     }, 200);
   };
 
-  const toggleProfileDropdown = () => {
-    setProfileDropdownVisible((prev) => !prev);
-  };
-
-  // Close profile dropdown if clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target)
-      ) {
-        setProfileDropdownVisible(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Debounce live search: dispatch live search thunk after delay when searchQuery changes
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery.trim().length > 0) {
-        dispatch(fetchLiveSearchProducts(searchQuery.trim()));
-      }
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, dispatch]);
-
-  // Close the search bar if user clicks outside the search container
-  useEffect(() => {
-    const handleClickOutsideSearch = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSearch(false);
-        setSearchQuery("");
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutsideSearch);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutsideSearch);
-  }, []);
-
-  // Handle search submission (navigates to full search results page)
-  const handleSearchSubmit = () => {
-    if (searchQuery.trim()) {
-      navigate(`/products?keyword=${encodeURIComponent(searchQuery.trim())}`);
-      setShowSearch(false);
-      setSearchQuery("");
-    }
-  };
-
-  // Navigate to product detail on suggestion click
-  const handleSuggestionClick = (product) => {
-    navigate(`/product/${product._id}`);
-    setShowSearch(false);
-    setSearchQuery("");
-  };
-
-  // Remove one suggestion from the list
-  const removeSuggestion = (id, e) => {
-    // Prevent suggestion click event propagation
-    e.stopPropagation();
-    setDisplayedSuggestions((prev) =>
-      prev.filter((product) => product._id !== id)
-    );
-  };
+ 
 
   return (
     <header>
@@ -244,123 +164,7 @@ const Header = () => {
           </div>
 
           {/* Icon Section */}
-          <div className="icon-section">
-            {showSearch ? (
-              <div className="search-bar" ref={searchRef}>
-                <input
-                  type="text"
-                  placeholder="Search for products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSearchSubmit();
-                  }}
-                />
-                <button onClick={handleSearchSubmit}>
-                  <Search />
-                </button>
-                <button
-                  className="close-btn"
-                  onClick={() => setShowSearch(false)}
-                >
-                  <Clear />
-                </button>
-                {((displayedSuggestions && displayedSuggestions.length > 0) ||
-                  searchLoading) && (
-                  <div className="search-suggestions">
-                    {searchLoading && (
-                      <div className="search-loading">Searching...</div>
-                    )}
-                    {!searchLoading &&
-                      displayedSuggestions.map((product) => (
-                        <div
-                          key={product._id}
-                          className="suggestion-item"
-                          onClick={() => handleSuggestionClick(product)}
-                        >
-                          {product.image && (
-                            <img
-                              src={product.image.url || product.image}
-                              alt={product.name}
-                            />
-                          )}
-                          <span>{product.name}</span>
-                          <button
-                            className="delete-suggestion-btn"
-                            onClick={(e) => removeSuggestion(product._id, e)}
-                          >
-                            <Clear fontSize="6px" />
-                          </button>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="search-icon" onClick={() => setShowSearch(true)}>
-                <Search />
-              </div>
-            )}
-
-            {/* Profile Dropdown */}
-            <div
-              className="profile-dropdown-container"
-              ref={profileDropdownRef}
-            >
-              <div className="icon-link" onClick={toggleProfileDropdown}>
-                <Person />
-              </div>
-              {profileDropdownVisible && (
-                <div className="profile-dropdown">
-                  <ul>
-                    {user ? (
-                      <>
-                        <li>
-                          <Link to="/profile">
-                            <Face /> Profile
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to="/orders">
-                            <ShoppingBag /> Order
-                          </Link>
-                        </li>
-                      </>
-                    ) : (
-                      <>
-                        <li>
-                          <Link to="/sign-in">
-                            <Login /> Sign In
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to="/sign-up">
-                            <PersonAdd /> Sign Up
-                          </Link>
-                        </li>
-                      </>
-                    )}
-                    {user && (
-                      <li>
-                        <button onClick={() => dispatch(logout())}>
-                          <Logout /> Logout
-                        </button>
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            <Link to="/wishlist" className="icon-link">
-              <Favorite />
-              <span className="counts">{wishlistItems.length}</span>
-            </Link>
-            <Link to="/cart" className="icon-link">
-              <AddShoppingCart />
-              <span className="count">{cartItems.length}</span>
-            </Link>
-          </div>
+          <IconSection />
         </div>
 
         {dropdownVisible && hoveredItem && (

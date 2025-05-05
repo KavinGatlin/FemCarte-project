@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
-import { Rating } from "@mui/material";
+import { Grid, Rating, Skeleton, Stack } from "@mui/material";
 import { Add, FavoriteBorder, Remove } from "@mui/icons-material";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSimilarProducts, fetchSingleProduct } from "../../redux/slices/productSlices";
+import {
+  fetchSimilarProducts,
+  fetchSingleProduct,
+} from "../../redux/slices/productSlices";
 import { addToCart } from "../../redux/slices/cartSlices";
-import { addToWishlist } from "../../redux/slices/wishlistSlices";
+import { addToWishlist, fetchWishlistItems } from "../../redux/slices/wishlistSlices";
 import { toast } from "react-toastify";
 import SimilarProduct from "./SimilarProduct";
 
-// Helper component for individual review with "Read more" functionality
+
 
 
 const ProductDetails = () => {
@@ -49,7 +52,9 @@ const ProductDetails = () => {
         let found = false;
         product.colors.forEach((color) => {
           if (color.photos && color.photos.length > 0) {
-            const index = color.photos.findIndex((photo) => photo.url === selectedImageUrl);
+            const index = color.photos.findIndex(
+              (photo) => photo.url === selectedImageUrl
+            );
             if (index !== -1) {
               setSelectedColor(color.colorName);
               setSelectedThumbnail(index);
@@ -65,19 +70,29 @@ const ProductDetails = () => {
     }
   }, [location.search, product]);
 
-  const selectedVariant = product?.colors?.find((c) => c.colorName === selectedColor);
+  const selectedVariant = product?.colors?.find(
+    (c) => c.colorName === selectedColor
+  );
   const mainImageUrl =
-    selectedVariant && selectedVariant.photos && selectedVariant.photos.length > 0
+    selectedVariant &&
+    selectedVariant.photos &&
+    selectedVariant.photos.length > 0
       ? selectedVariant.photos[selectedThumbnail]?.url
-      : product?.colors?.[0]?.photos?.[0]?.url || "https://via.placeholder.com/500";
+      : product?.colors?.[0]?.photos?.[0]?.url ||
+        "https://via.placeholder.com/500";
 
   const showSizes = selectedVariant?.sizes && selectedVariant.sizes.length > 0;
-  const showSeamSizes = !showSizes && selectedVariant?.seamSizes && selectedVariant.seamSizes.length > 0;
+  const showSeamSizes =
+    !showSizes &&
+    selectedVariant?.seamSizes &&
+    selectedVariant.seamSizes.length > 0;
 
   let currentStock = null;
   if (selectedVariant && selectedSize) {
     if (showSizes) {
-      const sizeObj = selectedVariant.sizes.find((s) => s.size === selectedSize);
+      const sizeObj = selectedVariant.sizes.find(
+        (s) => s.size === selectedSize
+      );
       currentStock = sizeObj ? sizeObj.stock : 0;
     } else if (showSeamSizes) {
       const seamObj = selectedVariant.seamSizes.find(
@@ -94,17 +109,23 @@ const ProductDetails = () => {
     : "Select Size";
   const buttonDisabled = !selectedSize || currentStock === 0;
 
-  const isDuplicateInCart = cartItems.some((item) =>
-    item.productId === product._id &&
-    String(item.selectedColorName) === String(selectedColor) &&
-    String(item.selectedSize) === String(selectedSize) &&
-    String(item.selectedSeamSize) === String(showSeamSizes ? selectedSize : null)
+  
+  const isDuplicateInCart = product && cartItems.some(
+    (item) =>
+      item.productId === product._id &&
+      String(item.selectedColorName) === String(selectedColor) &&
+      String(item.selectedSize) === String(selectedSize) &&
+      String(item.selectedSeamSize) ===
+        String(showSeamSizes ? selectedSize : null)
   );
-  const isDuplicateInWishlist = wishlistItems.some((item) =>
-    item.productId === product._id &&
-    String(item.selectedColorName) === String(selectedColor) &&
-    String(item.selectedSize) === String(selectedSize) &&
-    String(item.selectedSeamSize) === String(showSeamSizes ? selectedSize : null)
+
+  const isDuplicateInWishlist = product && wishlistItems.some(
+    (item) =>
+      item.productId === product._id &&
+      String(item.selectedColorName) === String(selectedColor) &&
+      String(item.selectedSize) === String(selectedSize) &&
+      String(item.selectedSeamSize) ===
+        String(showSeamSizes ? selectedSize : null)
   );
 
   const handleAddToCart = () => {
@@ -147,6 +168,15 @@ const ProductDetails = () => {
       toast.error("Please log in to add items to your wishlist.");
       return;
     }
+    if (!selectedSize) {
+      toast.error("Please select a size or inseam before adding to wishlist.");
+      return;
+    }
+    if (!selectedColor) {
+      toast.error("Please select a color before adding to wishlist.");
+      return;
+    }
+
     if (isDuplicateInWishlist) {
       toast.info("Product is already in wishlist.");
       return;
@@ -166,17 +196,31 @@ const ProductDetails = () => {
       .unwrap()
       .then(() => {
         toast.success("Item added to wishlist!");
+        dispatch(fetchWishlistItems(user._id))
       })
-      .catch((error) => {
-        if (error?.message?.toLowerCase().includes("already")) {
+      .catch((err) => {
+        // err may be a string (from rejectWithValue) or an Error
+        const msg = typeof err === "string" ? err : err.message;
+        if (msg.toLowerCase().includes("already")) {
           toast.info("Product is already in wishlist.");
         } else {
-          toast.error(error?.message || "Failed to add item to wishlist.");
+          toast.error(msg || "Failed to add item to wishlist.");
         }
       });
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading)
+    return (
+      <>
+        <Grid item md={5} sm={8} xs={12} lg={12} height={"100%"}>
+          <Stack spacing={"1rem"}>
+            {Array.from({ length: 18 }).map((_, index) => (
+              <Skeleton key={index} variant="rounded" height={"2rem"} />
+            ))}
+          </Stack>
+        </Grid>
+      </>
+    );
   if (error) return <p>Error: {error}</p>;
   if (!product || !product.colors || product.colors.length === 0) {
     return <p>No product found or no images available.</p>;
@@ -196,28 +240,37 @@ const ProductDetails = () => {
             </div>
             <img src={mainImageUrl} alt="Selected Product" />
           </div>
-          {selectedVariant && selectedVariant.photos && selectedVariant.photos.length > 0 && (
-            <div className="product-details__thumbnails">
-              {selectedVariant.photos.map((photo, index) => (
-                <img
-                  key={index}
-                  src={photo.url}
-                  alt={`Thumbnail ${index + 1}`}
-                  className={`thumbnail ${selectedThumbnail === index ? "active" : ""}`}
-                  onClick={() => setSelectedThumbnail(index)}
-                />
-              ))}
-            </div>
-          )}
+          {selectedVariant &&
+            selectedVariant.photos &&
+            selectedVariant.photos.length > 0 && (
+              <div className="product-details__thumbnails">
+                {selectedVariant.photos.map((photo, index) => (
+                  <img
+                    key={index}
+                    src={photo.url}
+                    alt={`Thumbnail ${index + 1}`}
+                    className={`thumbnail ${
+                      selectedThumbnail === index ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedThumbnail(index)}
+                  />
+                ))}
+              </div>
+            )}
         </div>
 
         {/* Product Information */}
         <div className="product-details__info">
           <nav className="breadcrumb">
             <Link to="/">Home</Link> &gt;{" "}
-            <Link to={`/products?category=${product.category?._id}`}>{categoryName}</Link> &gt;{" "}
-            <Link to={`/products?subcategory=${product.subcategory?._id}`}>{subCategoryName}</Link> &gt;{" "}
-            <span>{product.name}</span>
+            <Link to={`/products?category=${product.category?._id}`}>
+              {categoryName}
+            </Link>{" "}
+            &gt;{" "}
+            <Link to={`/products?subcategory=${product.subcategory?._id}`}>
+              {subCategoryName}
+            </Link>{" "}
+            &gt; <span>{product.name}</span>
           </nav>
           <h1 className="product-details__title">{product.name}</h1>
           <div className="product-details__reviews">
@@ -244,10 +297,13 @@ const ProductDetails = () => {
                     src={
                       color.colorImage
                         ? color.colorImage.url
-                        : (color.photos && color.photos[0]?.url) || "https://via.placeholder.com/30"
+                        : (color.photos && color.photos[0]?.url) ||
+                          "https://via.placeholder.com/30"
                     }
                     alt={color.colorName || `Color ${index + 1}`}
-                    className={`color-image ${selectedColor === color.colorName ? "selected" : ""}`}
+                    className={`color-image ${
+                      selectedColor === color.colorName ? "selected" : ""
+                    }`}
                   />
                   <span className="color-name">{color.colorName}</span>
                 </div>
@@ -265,7 +321,9 @@ const ProductDetails = () => {
                     {selectedVariant.sizes.map((item, index) => (
                       <span
                         key={index}
-                        className={`size-box ${selectedSize === item.size ? "selected" : ""} ${item.stock === 0 ? "disabled" : ""}`}
+                        className={`size-box ${
+                          selectedSize === item.size ? "selected" : ""
+                        } ${item.stock === 0 ? "disabled" : ""}`}
                         onClick={() => {
                           if (item.stock === 0) {
                             toast.error("This size is out of stock");
@@ -286,7 +344,9 @@ const ProductDetails = () => {
                     {selectedVariant.seamSizes.map((item, index) => (
                       <span
                         key={index}
-                        className={`size-box ${selectedSize === item.seamSize ? "selected" : ""} ${item.stock === 0 ? "disabled" : ""}`}
+                        className={`size-box ${
+                          selectedSize === item.seamSize ? "selected" : ""
+                        } ${item.stock === 0 ? "disabled" : ""}`}
                         onClick={() => {
                           if (item.stock === 0) {
                             toast.error("This seam size is out of stock");
@@ -306,19 +366,27 @@ const ProductDetails = () => {
 
           {/* Quantity */}
           <div className="product-details_quantity">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+              -
+            </button>
             <span>{quantity}</span>
             <button onClick={() => setQuantity(quantity + 1)}>+</button>
           </div>
 
-          <button className="product-details__add-to-cart" disabled={buttonDisabled} onClick={handleAddToCart}>
+          <button
+            className="product-details__add-to-cart"
+            disabled={buttonDisabled}
+            onClick={handleAddToCart}
+          >
             {buttonLabel}
           </button>
 
           <div className="product-details__description">
             <h3 onClick={() => setDescriptionOpen(!descriptionOpen)}>
               Description
-              <span className="toggle-arrow">{descriptionOpen ? <Remove /> : <Add />}</span>
+              <span className="toggle-arrow">
+                {descriptionOpen ? <Remove /> : <Add />}
+              </span>
             </h3>
             {descriptionOpen && (
               <div
@@ -335,7 +403,7 @@ const ProductDetails = () => {
       {/* Reviews Section */}
       <div className="product-details__reviews-section">
         <h2>Customer Reviews</h2>
-        {(!product.reviews || product.reviews.length === 0) ? (
+        {!product.reviews || product.reviews.length === 0 ? (
           <p>No reviews available.</p>
         ) : (
           product.reviews.map((review) => (
@@ -361,13 +429,26 @@ const ReviewItem = ({ review }) => {
 
   return (
     <div className="review" style={{ marginBottom: "1rem" }}>
-      <div className="review-card" style={{ backgroundColor: "#f9f9f9", borderRadius: "8px", padding: "1.5rem", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)" }}>
-        <div className="review-header" style={{ display: "flex", alignItems: "center", marginBottom: "0.75rem" }}>
+      <div
+        className="review-card"
+        style={{
+          backgroundColor: "#f9f9f9",
+          borderRadius: "8px",
+          padding: "1.5rem",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)",
+        }}
+      >
+        <div
+          className="review-header"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: "0.75rem",
+          }}
+        >
           <img
             src={
-              review.user &&
-                review.user.avatar &&
-                review.user.avatar.length > 0
+              review.user && review.user.avatar && review.user.avatar.length > 0
                 ? review.user.avatar[0].url
                 : "/default-user.png"
             }
@@ -382,14 +463,38 @@ const ReviewItem = ({ review }) => {
               marginRight: "1rem",
             }}
           />
-          <div className="review-info" style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <span className="review-username" style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>
+          <div
+            className="review-info"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <span
+              className="review-username"
+              style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}
+            >
               {review.user && review.user.name ? review.user.name : "Anonymous"}
             </span>
-            <Rating value={review.rating} readOnly precision={0.5} size="small" style={{ marginTop: "0.25rem" }} />
+            <Rating
+              value={review.rating}
+              readOnly
+              precision={0.5}
+              size="small"
+              style={{ marginTop: "0.25rem" }}
+            />
           </div>
         </div>
-        <p className="review-comment" style={{ fontSize: "0.95rem", color: "#555", lineHeight: "1.45", display:"" }}>
+        <p
+          className="review-comment"
+          style={{
+            fontSize: "0.95rem",
+            color: "#555",
+            lineHeight: "1.45",
+            display: "",
+          }}
+        >
           {commentText}
         </p>
         {review.comment.length > threshold && !expanded && (
@@ -424,7 +529,10 @@ const ReviewItem = ({ review }) => {
             Show less
           </button>
         )}
-        <span className="review-date" style={{ fontSize: "0.85rem", color: "#aaa", textAlign: "right" }}>
+        <span
+          className="review-date"
+          style={{ fontSize: "0.85rem", color: "#aaa", textAlign: "right" }}
+        >
           {new Date(review.createdAt).toLocaleDateString("en-GB", {
             day: "numeric",
             month: "short",

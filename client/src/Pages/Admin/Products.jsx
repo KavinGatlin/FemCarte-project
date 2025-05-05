@@ -52,14 +52,30 @@ const Products = () => {
         : "https://via.placeholder.com/50";
 
     // Compute overall stock from all color variants sizes
-    const overallStock = product.colors
-      ? product.colors.reduce((total, color) => {
-        const colorStock = color.sizes
-          ? color.sizes.reduce((sum, s) => sum + s.stock, 0)
-          : 0;
-        return total + colorStock;
-      }, 0)
-      : 0;
+    const { totalSizeStock, totalSeamStock } = (product.colors || []).reduce(
+      (acc, color) => {
+        (color.sizes   || []).forEach(sz => acc.totalSizeStock += Number(sz.stock || 0));
+        (color.seamSizes || []).forEach(sz => acc.totalSeamStock += Number(sz.stock || 0));
+        return acc;
+      },
+      { totalSizeStock: 0, totalSeamStock: 0 }
+    );
+  
+    // 2) Decide which to show
+    let stockCell = null;
+    if (totalSeamStock > 0) {
+      stockCell = (
+        <div>
+          <p>Bottom:</p> {totalSeamStock}
+        </div>
+      );
+    } else if (totalSizeStock > 0) {
+      stockCell = (
+        <div>
+          <p>Top:</p> {totalSizeStock}
+        </div>
+      );
+    }
 
     return {
       photo: (
@@ -71,7 +87,7 @@ const Products = () => {
       ),
       name: product.name,
       price: `$${product.price.toFixed(2)}`,
-      stock: overallStock,
+      stock: stockCell,
       categoryName: product.category?.name || "N/A",
       subcategoryName: product.subcategory?.name || "N/A",
       colors: (

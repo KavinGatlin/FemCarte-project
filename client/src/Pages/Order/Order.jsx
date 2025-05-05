@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Grid, Stack, Skeleton } from "@mui/material";
 import { useEffect } from "react";
 import { fetchOrders } from "../../redux/slices/orderSlices";
-
 
 const Order = () => {
   const navigate = useNavigate();
@@ -17,7 +17,18 @@ const Order = () => {
     navigate(`/orders-details/${id}`);
   };
 
-  if (loading) return <p className="error">Loading... {error}</p>;
+  if (loading)
+    return (
+      <>
+        <Grid item md={5} sm={8} xs={12} lg={12} height={"100%"}>
+          <Stack spacing={"1rem"}>
+            {Array.from({ length: 18 }).map((_, index) => (
+              <Skeleton key={index} variant="rounded" height={"2rem"} />
+            ))}
+          </Stack>
+        </Grid>
+      </>
+    );
   if (error) return <p className="error">Error loading orders: {error}</p>;
 
   return (
@@ -37,7 +48,10 @@ const Order = () => {
                 <div className="order-header-info">
                   <div className="order-info">
                     <h3>Order #{order._id.slice(-10).toUpperCase()}</h3>
-                    <p>Placed on: {new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p>
+                      Placed on:{" "}
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </p>
                     <p>
                       Status:{" "}
                       <span className={`status ${order.status.toLowerCase()}`}>
@@ -65,7 +79,9 @@ const Order = () => {
                       <div className="product-item" key={item._id}>
                         <div className="product-image">
                           <img
-                            src={item.imageUrl || "https://via.placeholder.com/100"}
+                            src={
+                              item.imageUrl || "https://via.placeholder.com/100"
+                            }
                             alt={item.name}
                           />
                         </div>

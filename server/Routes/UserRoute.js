@@ -3,8 +3,7 @@ import { deleteUser, getAllUsers, googleLogin, loginUser, registerUser } from '.
 import { verifyGoogleToken } from '../database/firebaseAdmin.js';
 import { authorizeRoles, isAuthenticatedUser } from '../middlewares/auth.js';
 
-// import upload from '../middlewares/multer.js';
-// import { authorizeRoles, isAuthenticatedUser } from '../middlewares/auth.js';
+
 
 const router = express.Router();
 

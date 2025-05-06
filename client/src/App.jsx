@@ -54,6 +54,7 @@ const LineCharts = lazy(() => import("./Pages/Admin/Charts/LineCharts"));
 const ProductManagement = lazy(() =>
   import("./Pages/Admin/Management/ProductManagement")
 );
+
 const TransactionManagement = lazy(() =>
   import("./Pages/Admin/Management/TransactionManagement")
 );
@@ -430,7 +431,6 @@ const App = () => {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-        
       </Suspense>
       <ToastContainer position="top-right" autoClose={3000} />
     </BrowserRouter>

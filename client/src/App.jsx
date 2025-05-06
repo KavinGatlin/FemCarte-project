@@ -430,6 +430,7 @@ const App = () => {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        
       </Suspense>
       <ToastContainer position="top-right" autoClose={3000} />
     </BrowserRouter>
